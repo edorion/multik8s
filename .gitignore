@@ -1,0 +1,8 @@
+# Ignore workerkube and masterkube working dir's
+workerkube/
+masterkube/
+
+# Ignore Vault and Boundary licenses
+.license
+.vaultlicense
+.boundarylicense

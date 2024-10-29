@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boundary-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: boundary-controller
+  template:
+    metadata:
+      labels:
+        app: boundary-controller
+    spec:
+      containers:
+      - name: boundary-controller
+        image: hashicorp/boundary:latest
+        command: ['boundary -config /boundary/config.hcl']
+        ports:
+        - name: port9200
+          containerPort: 9200
+        - name: port9201
+          containerPort: 9201
+        - name: port9202
+          containerPort: 9202
+        env:
+          - name: psqlPassword
+            valueFrom:
+              secretKeyRef:
+                name: my-release-postgresql
+                key: postgres-password
+          - name: BOUNDARY_POSTGRES_URL
+            value: "postgresql://postgres:$(psqlPassword)@my-release-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
+        volumeMounts:
+          - name: config
+            mountPath: "/boundary"
+            subPath: config.hcl
+      initContainers:
+        - name: psqlDB
+          image: hashicorp/boundary:latest
+          command: ['boundary database init -config /boundary/config.hcl']
+          env:
+            - name: psqlPassword
+              valueFrom:
+                secretKeyRef:
+                  name: my-release-postgresql
+                  key: postgres-password
+            - name: BOUNDARY_POSTGRES_URL
+              value: "postgresql://postgres:$(psqlPassword)@my-release-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
+          volumeMounts:
+            - name: config
+              mountPath: "/boundary"
+              subPath: config.hcl
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boundary-controller-service
+spec:
+  selector:
+    app: boundary-controller
+  ports:
+    - name: port9200
+      port: 9200
+    - name: port9201
+      port: 9201
+    - name: port9202
+      port: 9202
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: boundary-controller-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /boundary
+        pathType: Prefix
+        backend:
+          service:
+            name: boundary-controller-service
+            port:
+              number: 9200

@@ -32,11 +32,11 @@ spec:
           - name: BOUNDARY_POSTGRES_URL
             value: "postgresql://postgres:$(psqlPassword)@my-release-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
         volumeMounts:
-          - name: config
+          - name: boundary-config
             mountPath: "/boundary"
             subPath: config.hcl
       initContainers:
-        - name: psqlDB
+        - name: psqldb
           image: hashicorp/boundary:latest
           command: ['boundary database init -config /boundary/config.hcl']
           env:
@@ -48,9 +48,13 @@ spec:
             - name: BOUNDARY_POSTGRES_URL
               value: "postgresql://postgres:$(psqlPassword)@my-release-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
           volumeMounts:
-            - name: config
+            - name: boundary-config
               mountPath: "/boundary"
               subPath: config.hcl
+      volumes:
+      - name: boundary-config
+        configMap:
+          name: boundary-config
 ---
 apiVersion: v1
 kind: Service

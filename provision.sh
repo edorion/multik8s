@@ -7,7 +7,7 @@ mkdir masterkube >/dev/null 2>&1
 mkdir workerkube >/dev/null 2>&1
 
 #Move deployment yaml's to master storage
-cp ./toProvision/. ./masterkube/
+cp ./toProvision/* ./masterkube/
 
 # Cleanup existing images
 multipass delete --all -p
@@ -44,10 +44,9 @@ multipass exec pmaster -- sudo microk8s enable dns
 multipass exec pmaster -- sudo microk8s enable dashboard
 multipass exec pmaster -- sudo microk8s enable hostpath-storage
 
-#
+# Join the nodes
 #multipass exec pmaster -- sudo microk8s add-node --format json > ./workerkube/add-node
 #multipass exec pworker1 -- sudo microk8s join $(jq -r '.urls[0]' < ./workerkube/add-node)
-
 #multipass restart pmaster pworker1
 
 # install K8's management tooling - Headlamp & ELK stack
@@ -58,10 +57,11 @@ multipass exec pmaster -- kubectl apply -f https://raw.githubusercontent.com/kin
 #install postgress
 multipass exec pmaster -- helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
 
+#install BoundaryController
+multipass exec pmaster -- kubectl apply -f ./.kube/boundaryControllerConfigMap.yaml
+multipass exec pmaster -- kubectl apply -f ./.kube/boundaryController.yaml
+
 # install test nginx app
 #multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
-
-#install BoundaryController
-multipass exec pmaster -- kubectl apply -f ./.kube/boundaryController.yaml
 
 date

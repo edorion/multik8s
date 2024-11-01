@@ -3,22 +3,12 @@ kind: ConfigMap
 metadata:
   name: boundary-config
 data:
-  config.hcl: |
+  config.hcl: |-
     controller {
-      # This name attr must be unique across all controller instances if running in HA mode
-      name = "controller-${HOSTNAME}"
-      description = "${HOSTNAME}"
-
-      license = "file:///vagrant/.boundary.license"
+      name = "boundary-controller"
+      description = "boundary-controller"
+      license = "/etc/boundary/license"
       graceful_shutdown_wait_duration = "10s"
-
-      # Database URL for postgres. This can be a direct "postgres://"
-      # URL, or it can be "file://" to read the contents of a file to
-      # supply the url, or "env://" to name an environment variable
-      # that contains the URL.
-      database {
-          url = "postgresql://boundary:password@10.100.3.11:5432/boundary"
-      }
     }
 
     listener "tcp" {

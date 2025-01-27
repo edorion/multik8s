@@ -41,8 +41,8 @@ spec:
         image: hashicorp/boundary:latest
         command: ['boundary']
         args: ['database', 'init', '-config /etc/boundary/config.hcl']
-#        command: ['sleep']
-#        args: ['20000']
+        command: ['sleep']
+        args: ['20000']
         env:
           - name: psqlPassword
             valueFrom:

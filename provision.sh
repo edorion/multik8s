@@ -64,4 +64,13 @@ multipass exec pmaster -- kubectl apply -f ./.kube/boundaryController.yaml
 # install test nginx app
 #multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
 
+# install Vault
+multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+multipass exec pmaster -- helm install vault hashicorp/vault --set='server.ha.enabled=true' --set='server.ha.raft.enabled=true'
+multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+multipass exec pmaster -- kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+
+
+
 date

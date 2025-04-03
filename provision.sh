@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # to pick over for improvments https://github.com/arashkaffamanesh/kubeadm-multipass i.e. https://mkcert.org/
 
@@ -49,20 +49,18 @@ multipass exec pmaster -- sudo microk8s enable hostpath-storage
 #multipass exec pworker1 -- sudo microk8s join $(jq -r '.urls[0]' < ./workerkube/add-node)
 #multipass restart pmaster pworker1
 
-# install K8's management tooling - Headlamp & ELK stack
+# install K8's management tooling - Headlamp, ELK, Cribl
 multipass exec pmaster -- helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
 multipass exec pmaster -- helm install my-headlamp headlamp/headlamp --namespace kube-system
 multipass exec pmaster -- kubectl apply -f https://raw.githubusercontent.com/kinvolk/headlamp/main/kubernetes-headlamp.yaml
 
-#install postgress
-multipass exec pmaster -- helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
+helm repo add cribl https://criblio.github.io/helm-charts/
+helm install -f CriblValues.yaml
 
-#install BoundaryController
-multipass exec pmaster -- kubectl apply -f ./.kube/boundaryControllerConfigMap.yaml
-multipass exec pmaster -- kubectl apply -f ./.kube/boundaryController.yaml
-
-# install test nginx app
-#multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
+#helm repo add elastic https://helm.elastic.co
+#helm repo update
+# Install an eck-managed Elasticsearch, Kibana, Beats and Logstash using custom values.
+#helm install eck-stack-with-logstash elastic/eck-stack --values https://raw.githubusercontent.com/elastic/cloud-on-k8s/2.16/deploy/eck-stack/examples/logstash/basic-eck.yaml -n elastic-stack
 
 # install Vault
 multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
@@ -71,6 +69,37 @@ multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-share
 multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
+# install Pi-hole
+helm repo add savepointsam https://savepointsam.github.io/charts
+helm repo update
+helm install my-release savepointsam/pihole
+
+# install HomeAssistant
+helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
+helm repo update
+helm install home-assistant pajikos/home-assistant
+
+# install IT Tools
+helm repo add jeffresc https://charts.jeffresc.dev
+helm repo update
+helm install it-tools jeffresc/it-tools
+
+# install Homepage
+helm repo add jameswynn https://jameswynn.github.io/helm-charts
+helm repo update
+helm install homepage jameswynn/homepage -f values.yaml
+
+
+
+#install postgress
+#multipass exec pmaster -- helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
+
+#install BoundaryController
+#multipass exec pmaster -- kubectl apply -f ./.kube/boundaryControllerConfigMap.yaml
+#multipass exec pmaster -- kubectl apply -f ./.kube/boundaryController.yaml
+
+# install test nginx app
+#multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
 
 
 date

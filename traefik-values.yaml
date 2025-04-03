@@ -120,14 +120,21 @@ core:  # @schema additionalProperties: false
 
 # Traefik experimental features
 experimental:
+  # -- Defines whether all plugins must be loaded successfully for Traefik to start
+  abortOnPluginFailure: false
+  fastProxy:
+    # -- Enables the FastProxy implementation.
+    enabled: false
+    # -- Enable debug mode for the FastProxy implementation.
+    debug: false
+  kubernetesGateway:
+    # -- Enable traefik experimental GatewayClass CRD
+    enabled: false
   # -- Enable traefik experimental plugins
   plugins: {}
   # demo:
   #   moduleName: github.com/traefik/plugindemo
   #   version: v0.2.1
-  kubernetesGateway:
-    # -- Enable traefik experimental GatewayClass CRD
-    enabled: false
 
 gateway:
   # -- When providers.kubernetesGateway.enabled, deploy a default gateway
@@ -303,6 +310,8 @@ providers:  # @schema additionalProperties: false
     namespaces: []
     # -- A label selector can be defined to filter on specific GatewayClass objects only.
     labelselector: ""
+    # -- Defines whether to use Native Kubernetes load-balancing mode by default.
+    nativeLBByDefault: false
     statusAddress:
       # -- This IP will get copied to the Gateway status.addresses, and currently only supports one IP value (IPv4 or IPv6).
       ip: ""
@@ -310,8 +319,9 @@ providers:  # @schema additionalProperties: false
       hostname: ""
       # -- The Kubernetes service to copy status addresses from. When using third parties tools like External-DNS, this option can be used to copy the service loadbalancer.status (containing the service's endpoints IPs) to the gateways. Default to Service of this Chart.
       service:
-        name: "{{ (include \"traefik.fullname\" .) }}"
-        namespace: "{{ .Release.Namespace }}"
+        enabled: true
+        name: ""
+        namespace: ""
 
   file:
     # -- Create a file provider
@@ -531,6 +541,18 @@ metrics:
 tracing:  # @schema additionalProperties: false
   # -- Enables tracing for internal resources. Default: false.
   addInternals: false
+  # -- Service name used in selected backend. Default: traefik.
+  serviceName:  # @schema type:[string, null]
+  # -- Defines additional resource attributes to be sent to the collector.
+  resourceAttributes: {}
+  # -- Defines the list of request headers to add as attributes. It applies to client and server kind spans.
+  capturedRequestHeaders: []
+  # -- Defines the list of response headers to add as attributes. It applies to client and server kind spans.
+  capturedResponseHeaders: []
+  # -- By default, all query parameters are redacted. Defines the list of query parameters to not redact.
+  safeQueryParams: []
+  # -- The proportion of requests to trace, specified between 0.0 and 1.0. Default: 1.0.
+  sampleRate:  # @schema type:[number, null]; minimum:0; maximum:1
   otlp:
     # -- See https://doc.traefik.io/traefik/v3.0/observability/tracing/opentelemetry/
     enabled: false
@@ -626,10 +648,12 @@ ports:
     protocol: TCP
     # -- See [upstream documentation](https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport)
     nodePort:  # @schema type:[integer, null]; minimum:0
-    # Port Redirections
-    # Added in 2.2, you can make permanent redirects via entrypoints.
-    # https://docs.traefik.io/routing/entrypoints/#redirection
-    redirectTo: {}
+    redirections:
+      # -- Port Redirections
+      # Added in 2.2, one can make permanent redirects via entrypoints.
+      # Same sets of parameters: to, scheme, permanent and priority.
+      # https://docs.traefik.io/routing/entrypoints/#redirection
+      entryPoint: {}
     forwardedHeaders:
       # -- Trust forwarded headers information (X-Forwarded-*).
       trustedIPs: []
@@ -807,7 +831,7 @@ persistence:
 certificatesResolvers: {}
 
 # -- If hostNetwork is true, runs traefik in the host network namespace
-# To prevent unschedulabel pods due to port collisions, if hostNetwork=true
+# To prevent unschedulable pods due to port collisions, if hostNetwork=true
 # and replicas>1, a pod anti-affinity is recommended and will be set if the
 # affinity is left as default.
 hostNetwork: false
@@ -853,7 +877,7 @@ affinity: {}
 #      - labelSelector:
 #          matchLabels:
 #            app.kubernetes.io/name: '{{ template "traefik.name" . }}'
-#            app.kubernetes.io/instance: '{{ .Release.Name }}-{{ .Release.Namespace }}'
+#            app.kubernetes.io/instance: '{{ .Release.Name }}-{{ include "traefik.namespace" . }}'
 #        topologyKey: kubernetes.io/hostname
 
 # -- nodeSelector is the simplest recommended form of node selection constraint.
@@ -917,7 +941,13 @@ hub:
       listenAddr: ""
       # -- Certificate of the WebHook admission server. Default: "hub-agent-cert".
       secretName: ""
+    openApi:
+      # -- When set to true, it will only accept paths and methods that are explicitly defined in its OpenAPI specification
+      validateRequestMethodAndPath: false
 
+  experimental:
+    # -- Set to true in order to enable AI Gateway. Requires a valid license token.
+    aigateway: false
   redis:
     # -- Enable Redis Cluster. Default: true.
     cluster:    # @schema type:[boolean, null]

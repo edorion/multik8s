@@ -13,6 +13,10 @@ ingress:
       gethomepage.dev/description: "Dynamically Detected Homepage"
       gethomepage.dev/group: "Dynamic"
       gethomepage.dev/icon: "homepage.png"
+      kubernetes.io/ingress.class: "traefik"
+      kubernetes.io/tls-acme: "true"
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+      traefik.ingress.kubernetes.io/router.tls: "true"
     hosts:
       - host: homepage.k3d.localhost
         paths:

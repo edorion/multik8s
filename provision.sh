@@ -65,8 +65,9 @@ multipass exec pmaster --helm install -f /home/ubuntu/.kube/CriblValues.yaml
 
 # install Vault
 echo "###### Installing Vault ######"
+multipass exec pmaster -- kubectl create namespace vault
 multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-multipass exec pmaster -- export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault" export VAULT_SERVICE_NAME="vault-internal" export K8S_CLUSTER_NAME="cluster.local"
+export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
 multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
 multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
@@ -81,8 +82,8 @@ multipass exec pmaster -- helm install my-release savepointsam/pihole
 # install HomeAssistant
 echo "###### Installing HomeAssistant ######"
 multipass exec pmaster -- helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
-multipass exec pmaster -- 
-multipass exec pmaster -- t pajikos/home-assistant
+multipass exec pmaster -- helm repo update
+multipass exec pmaster -- helm install home-assistant pajikos/home-assistant -f /home/ubuntu/.kube/homeassistanValues.yaml
 
 # install IT Tools
 echo "###### Installing IT Tools ######"

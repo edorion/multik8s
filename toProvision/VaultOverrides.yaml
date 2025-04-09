@@ -26,3 +26,13 @@ server:
             }
             disable_mlock = true
             service_registration "kubernetes" {}
+
+ingress:
+  # Enable ingress for home assistant
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    kubernetes.io/tls-acme: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"

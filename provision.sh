@@ -50,12 +50,13 @@ multipass exec pmaster -- sudo microk8s enable hostpath-storage
 #multipass restart pmaster pworker1
 
 # install K8's management tooling - Headlamp, ELK, Cribl
-multipass exec pmaster -- helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
+echo "###### Installing Headlamp & Cribl ######"
+multipass exec pmaster -- helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
 multipass exec pmaster -- helm install my-headlamp headlamp/headlamp --namespace kube-system
 multipass exec pmaster -- kubectl apply -f https://raw.githubusercontent.com/kinvolk/headlamp/main/kubernetes-headlamp.yaml
 
 multipass exec pmaster --helm repo add cribl https://criblio.github.io/helm-charts/
-multipass exec pmaster --helm install -f CriblValues.yaml
+multipass exec pmaster --helm install -f /home/ubuntu/.kube/CriblValues.yaml
 
 #helm repo add elastic https://helm.elastic.co
 #helm repo update
@@ -63,32 +64,37 @@ multipass exec pmaster --helm install -f CriblValues.yaml
 #helm install eck-stack-with-logstash elastic/eck-stack --values https://raw.githubusercontent.com/elastic/cloud-on-k8s/2.16/deploy/eck-stack/examples/logstash/basic-eck.yaml -n elastic-stack
 
 # install Vault
+echo "###### Installing Vault ######"
 multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
 multipass exec pmaster -- export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault" export VAULT_SERVICE_NAME="vault-internal" export K8S_CLUSTER_NAME="cluster.local"
-multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f VaultOverrides.yaml
+multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
 multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
 # install Pi-hole
+echo "###### Installing Pi-hole ######"
 multipass exec pmaster -- helm repo add savepointsam https://savepointsam.github.io/charts
 multipass exec pmaster -- helm repo update
 multipass exec pmaster -- helm install my-release savepointsam/pihole
 
 # install HomeAssistant
+echo "###### Installing HomeAssistant ######"
 multipass exec pmaster -- helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
 multipass exec pmaster -- 
 multipass exec pmaster -- t pajikos/home-assistant
 
 # install IT Tools
+echo "###### Installing IT Tools ######"
 multipass exec pmaster -- helm repo add jeffresc https://charts.jeffresc.dev
 multipass exec pmaster -- helm repo update
 multipass exec pmaster -- helm install it-tools jeffresc/it-tools
 
 # install Homepage
+echo "###### Installing Homepage ######"
 multipass exec pmaster -- helm repo add jameswynn https://jameswynn.github.io/helm-charts
 multipass exec pmaster -- helm repo update
-multipass exec pmaster -- helm install homepage jameswynn/homepage -f values.yaml
+multipass exec pmaster -- helm install homepage jameswynn/homepage -f /home/ubuntu/.kube/homepageValues.yaml
 
 #install postgress
 #multipass exec pmaster -- helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql

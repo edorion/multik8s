@@ -54,8 +54,8 @@ multipass exec pmaster -- helm repo add headlamp https://headlamp-k8s.github.io/
 multipass exec pmaster -- helm install my-headlamp headlamp/headlamp --namespace kube-system
 multipass exec pmaster -- kubectl apply -f https://raw.githubusercontent.com/kinvolk/headlamp/main/kubernetes-headlamp.yaml
 
-helm repo add cribl https://criblio.github.io/helm-charts/
-helm install -f CriblValues.yaml
+multipass exec pmaster --helm repo add cribl https://criblio.github.io/helm-charts/
+multipass exec pmaster --helm install -f CriblValues.yaml
 
 #helm repo add elastic https://helm.elastic.co
 #helm repo update
@@ -64,32 +64,31 @@ helm install -f CriblValues.yaml
 
 # install Vault
 multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-multipass exec pmaster -- helm install vault hashicorp/vault --set='server.ha.enabled=true' --set='server.ha.raft.enabled=true'
+multipass exec pmaster -- export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault" export VAULT_SERVICE_NAME="vault-internal" export K8S_CLUSTER_NAME="cluster.local"
+multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f VaultOverrides.yaml
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
 multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 multipass exec pmaster -- kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
 # install Pi-hole
-helm repo add savepointsam https://savepointsam.github.io/charts
-helm repo update
-helm install my-release savepointsam/pihole
+multipass exec pmaster -- helm repo add savepointsam https://savepointsam.github.io/charts
+multipass exec pmaster -- helm repo update
+multipass exec pmaster -- helm install my-release savepointsam/pihole
 
 # install HomeAssistant
-helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
-helm repo update
-helm install home-assistant pajikos/home-assistant
+multipass exec pmaster -- helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
+multipass exec pmaster -- 
+multipass exec pmaster -- t pajikos/home-assistant
 
 # install IT Tools
-helm repo add jeffresc https://charts.jeffresc.dev
-helm repo update
-helm install it-tools jeffresc/it-tools
+multipass exec pmaster -- helm repo add jeffresc https://charts.jeffresc.dev
+multipass exec pmaster -- helm repo update
+multipass exec pmaster -- helm install it-tools jeffresc/it-tools
 
 # install Homepage
-helm repo add jameswynn https://jameswynn.github.io/helm-charts
-helm repo update
-helm install homepage jameswynn/homepage -f values.yaml
-
-
+multipass exec pmaster -- helm repo add jameswynn https://jameswynn.github.io/helm-charts
+multipass exec pmaster -- helm repo update
+multipass exec pmaster -- helm install homepage jameswynn/homepage -f values.yaml
 
 #install postgress
 #multipass exec pmaster -- helm install my-release oci://registry-1.docker.io/bitnamicharts/postgresql
@@ -100,6 +99,5 @@ helm install homepage jameswynn/homepage -f values.yaml
 
 # install test nginx app
 #multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
-
 
 date

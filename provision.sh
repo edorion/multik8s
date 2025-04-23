@@ -25,6 +25,15 @@ multipass exec pmaster -- sudo snap install kubeadm --classic
 #multipass exec pworker1 -- sudo snap install helm --classic
 #multipass exec pworker1 -- sudo snap alias microk8s.kubectl kubectl
 
+# Install Caddy
+multipass exec pmaster -- sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+multipass exec pmaster -- curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+multipass exec pmaster -- curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+multipass exec pmaster -- sudo apt update
+multipass exec pmaster -- sudo apt install caddy
+multipass exec pmaster -- sudo cp /home/ubuntu/.kube/Caddyfile /etc/caddy/Caddyfile
+multipass exec pmaster -- sudo systemctl restart caddy
+
 # Make the user a sudoer, disable firewall within the vm and enable k8 dashboard and storage.
 multipass exec pmaster -- sudo usermod -a -G microk8s ubuntu
 #multipass exec pworker1 -- sudo usermod -a -G microk8s ubuntu
@@ -35,10 +44,9 @@ multipass exec pmaster -- sudo ufw disable
 multipass exec pmaster -- sudo microk8s enable community
 multipass exec pmaster -- microk8s enable metallb:192.168.64.192-192.168.64.200
 #https://www.robert-jensen.dk/posts/2021-microk8s-with-traefik-and-metallb/
-multipass exec pmaster -- sudo microk8s enable ingress
-multipass exec pmaster -- helm repo add traefik https://helm.traefik.io/traefik
+#multipass exec pmaster -- sudo microk8s enable ingress
+multipass exec pmaster -- helm repo add traefik https://traefik.github.io/charts
 multipass exec pmaster -- helm repo update
-multipass exec pmaster -- helm show values traefik/traefik > traefik-values.yaml
 multipass exec pmaster -- helm install traefik traefik/traefik -n traefik --create-namespace
 multipass exec pmaster -- sudo microk8s enable dns
 multipass exec pmaster -- sudo microk8s enable dashboard
@@ -52,8 +60,8 @@ multipass exec pmaster -- sudo microk8s enable hostpath-storage
 # install K8's management tooling - Headlamp, ELK, Cribl
 echo "###### Installing Headlamp & Cribl ######"
 multipass exec pmaster -- helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
-multipass exec pmaster -- helm install my-headlamp headlamp/headlamp --namespace kube-system
-multipass exec pmaster -- kubectl apply -f https://raw.githubusercontent.com/kinvolk/headlamp/main/kubernetes-headlamp.yaml
+multipass exec pmaster -- helm install my-headlamp headlamp/headlamp -f /home/ubuntu/.kube/headlampValues.yaml --namespace kube-system
+#multipass exec pmaster -- kubectl apply -f /home/ubuntu/.kube/headlamp.yaml
 
 multipass exec pmaster --helm repo add cribl https://criblio.github.io/helm-charts/
 multipass exec pmaster --helm install -f /home/ubuntu/.kube/CriblValues.yaml
@@ -64,14 +72,15 @@ multipass exec pmaster --helm install -f /home/ubuntu/.kube/CriblValues.yaml
 #helm install eck-stack-with-logstash elastic/eck-stack --values https://raw.githubusercontent.com/elastic/cloud-on-k8s/2.16/deploy/eck-stack/examples/logstash/basic-eck.yaml -n elastic-stack
 
 # install Vault
-echo "###### Installing Vault ######"
-multipass exec pmaster -- kubectl create namespace vault
-multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
-multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
-multipass exec pmaster -- kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
-multipass exec pmaster -- VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
-multipass exec pmaster -- kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+#echo "###### Installing Vault ######"
+#multipass exec pmaster -- kubectl create namespace vault
+#multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+#export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
+#multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
+#while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault status; done
+#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+#VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
 # install Pi-hole
 echo "###### Installing Pi-hole ######"

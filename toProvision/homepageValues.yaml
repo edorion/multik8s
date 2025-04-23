@@ -15,12 +15,12 @@ ingress:
       gethomepage.dev/icon: "homepage.png"
       kubernetes.io/ingress.class: "traefik"
       kubernetes.io/tls-acme: "true"
-      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-      traefik.ingress.kubernetes.io/router.tls: "true"
+      traefik.ingress.kubernetes.io/router.entrypoints: "web"
+      traefik.ingress.kubernetes.io/router.tls: "false"
     hosts:
-      - host: homepage.k3d.localhost
+      - host: vault.kallh.org
         paths:
-          - path: /
+          - path: /homepage
             pathType: Prefix
 
 config:

@@ -1,0 +1,14 @@
+{
+	log [logz] {
+		format  console
+		level   ERROR
+	}
+}
+
+{
+	auto_https off
+}
+
+vault.kallh.org {
+	reverse_proxy 10.100.1.11
+}

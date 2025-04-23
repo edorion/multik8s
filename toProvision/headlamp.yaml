@@ -4,9 +4,10 @@ metadata:
   name: headlamp
   namespace: kube-system
 spec:
+  type: LoadBalancer
   ports:
     - port: 80
-      targetPort: 4466
+      targetPort: web
   selector:
     k8s-app: headlamp
 ---
@@ -52,16 +53,18 @@ metadata:
     kubernetes.io/service-account.name: "headlamp-admin"
 type: kubernetes.io/service-account-token
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: whoami-https
+  name: headlamp-admin
 spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Path(`traefik`)
-      kind: Rule
-      services:
-        - name: whoami-service
-          port: 80
+  rules:
+  - http:
+      paths:
+      - path: /headlamp
+        pathType: Prefix
+        backend:
+          service:
+            name: headlamp-admin
+            port:
+              name: web

@@ -172,7 +172,7 @@ ingress:
   enabled: true
   # -- Annotations for Ingress resource
   annotations:
-    {}
+    {external-dns.alpha.kubernetes.io/hostname: "headlamp.microk8s.multipass"}
     # kubernetes.io/tls-acme: "true"
 
   # -- Additional labels to add to the Ingress resource
@@ -181,7 +181,7 @@ ingress:
     # environment: prod
 
   # -- Ingress class name. replacement for the deprecated "kubernetes.io/ingress.class" annotation
-  ingressClassName: ""
+  ingressClassName: "traefik"
 
   # -- Hostname(s) for the Ingress resource
   # Please refer to https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec for more information.

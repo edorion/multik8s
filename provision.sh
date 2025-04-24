@@ -26,11 +26,7 @@ multipass exec pmaster -- sudo snap install kubeadm --classic
 #multipass exec pworker1 -- sudo snap alias microk8s.kubectl kubectl
 
 # Install Caddy
-multipass exec pmaster -- sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
-multipass exec pmaster -- curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-multipass exec pmaster -- curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-multipass exec pmaster -- sudo apt update
-multipass exec pmaster -- sudo apt install caddy
+multipass exec pmaster -- sudo snap install --edge caddy
 multipass exec pmaster -- sudo cp /home/ubuntu/.kube/Caddyfile /etc/caddy/Caddyfile
 multipass exec pmaster -- sudo systemctl restart caddy
 
@@ -42,14 +38,15 @@ multipass exec pmaster -- sudo microk8s config > ./masterkube/config
 multipass exec pmaster -- sudo ufw disable
 #multipass exec pworker1 -- sudo ufw disable
 multipass exec pmaster -- sudo microk8s enable community
-multipass exec pmaster -- microk8s enable metallb:192.168.64.192-192.168.64.200
+multipass exec pmaster -- microk8s enable metallb:192.168.1.50-192.168.1.60
 #https://www.robert-jensen.dk/posts/2021-microk8s-with-traefik-and-metallb/
-#multipass exec pmaster -- sudo microk8s enable ingress
 multipass exec pmaster -- helm repo add traefik https://traefik.github.io/charts
+multipass exec pmaster -- helm repo add bitnami https://charts.bitnami.com/bitnami
 multipass exec pmaster -- helm repo update
 multipass exec pmaster -- helm install traefik traefik/traefik -n traefik --create-namespace
+multipass exec pmaster -- helm install external-dns bitnami/external-dns - external-dns-gcp --create-namespace -f externalDnsValues.yaml 
 multipass exec pmaster -- sudo microk8s enable dns
-multipass exec pmaster -- sudo microk8s enable dashboard
+#multipass exec pmaster -- sudo microk8s enable dashboard
 multipass exec pmaster -- sudo microk8s enable hostpath-storage
 
 # Join the nodes
@@ -60,7 +57,7 @@ multipass exec pmaster -- sudo microk8s enable hostpath-storage
 # install K8's management tooling - Headlamp, ELK, Cribl
 echo "###### Installing Headlamp & Cribl ######"
 multipass exec pmaster -- helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
-multipass exec pmaster -- helm install my-headlamp headlamp/headlamp -f /home/ubuntu/.kube/headlampValues.yaml --namespace kube-system
+multipass exec pmaster -- helm install headlamp headlamp/headlamp -f /home/ubuntu/.kube/headlampValues.yaml --namespace kube-system
 #multipass exec pmaster -- kubectl apply -f /home/ubuntu/.kube/headlamp.yaml
 
 multipass exec pmaster --helm repo add cribl https://criblio.github.io/helm-charts/
@@ -92,8 +89,7 @@ multipass exec pmaster -- helm install my-release savepointsam/pihole
 echo "###### Installing HomeAssistant ######"
 multipass exec pmaster -- helm repo add pajikos http://pajikos.github.io/home-assistant-helm-chart/
 multipass exec pmaster -- helm repo update
-multipass exec pmaster -- helm install home-assistant pajikos/home-assistant -f /home/ubuntu/.kube/homeassistanValues.yaml
-
+multipass exec pmaster -- helm install home-assistant pajikos/home-assistant -f /home/ubuntu/.kube/homeassistantValues.yaml
 # install IT Tools
 echo "###### Installing IT Tools ######"
 multipass exec pmaster -- helm repo add jeffresc https://charts.jeffresc.dev

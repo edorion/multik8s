@@ -101,7 +101,7 @@ securityContext: {}
 
 ingress:
   enable: false
-  annotations: {}
+  annotations: { external-dns.alpha.kubernetes.io/hostname: "cribl.microk8s.multipass" }
   tls: []
 #    - hosts:
 #        - cribl.example.com

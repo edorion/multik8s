@@ -1,7 +1,8 @@
 ingress:
   # Enable ingress for home assistant
   enabled: true
-  className: "traefik"
+  spec:
+    ingressClassName: "traefik"
   annotations:
     kubernetes.io/ingress.class: "traefik"
     kubernetes.io/tls-acme: "true"

@@ -22,6 +22,8 @@ kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.microk8s.multipass
 spec:
   routes:
     - match: PathPrefix(`/api`) || PathPrefix(`/dashboard`)

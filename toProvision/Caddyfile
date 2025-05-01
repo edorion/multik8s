@@ -3,9 +3,6 @@
 		format  console
 		level   ERROR
 	}
-}
-
-{
 	auto_https off
 }
 

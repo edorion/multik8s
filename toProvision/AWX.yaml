@@ -1,0 +1,66 @@
+AWX:
+  # enable use of awx-deploy template
+  enabled: true
+  name: awx
+  spec:
+    admin_user: admin
+
+  # configurations for external postgres instance
+  postgres:
+    enabled: true
+    host: Unset
+    port: 5678
+    dbName: Unset
+    username: admin
+    # for secret management, pass in the password independently of this file
+    # at the command line, use --set AWX.postgres.password
+    password: Unset
+    sslmode: prefer
+    type: unmanaged
+
+operator-controller:
+  spec:
+    # replicas is an example spec for the deployment
+    replicas: 1
+    # template drills down into the pod that will be manaeg
+    template:
+      spec:
+        # This is a pod-level override, so it can be applied here
+        # and not worry about container list semantics
+        securityContext:
+          fsGroup: 2000
+
+operator-controller-containers:
+  # this will get merged into the operator controller deployment spec for
+  # the container named `kube-rbac-proxy` at `spec.template.spec.containers`
+  kube-rbac-proxy:
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      seccompProfile:
+        type: RuntimeDefault
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ "ALL" ]
+
+awx-manager:
+   env:
+   - name: ANSIBLE_GATHERING
+     value: explicit
+   - name: ANSIBLE_DEBUG_LOGS
+     value: "true" # default was "false"
+   - name: WATCH_NAMESPACE
+     valueFrom:
+       fieldRef:
+         fieldPath: metadata.namespace
+
+ingress:
+  # Enable ingress for home assistant
+  enabled: true
+  className: "traefik"
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    kubernetes.io/tls-acme: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    external-dns.alpha.kubernetes.io/hostname: awx.microk8s.multipass

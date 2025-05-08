@@ -176,9 +176,9 @@ ingress:
     # kubernetes.io/tls-acme: "true"
 
   # -- Additional labels to add to the Ingress resource
-  labels: {}
-    # app.kubernetes.io/part-of: traefik
-    # environment: prod
+  labels:
+    app.kubernetes.io/part-of: traefik
+    environment: prod
 
   # -- Ingress class name. replacement for the deprecated "kubernetes.io/ingress.class" annotation
   ingressClassName: "traefik"
@@ -186,11 +186,10 @@ ingress:
   # -- Hostname(s) for the Ingress resource
   # Please refer to https://kubernetes.io/docs/reference/kubernetes-api/service-resources/ingress-v1/#IngressSpec for more information.
   hosts:
-    ['ingress.hosts[0].host=headlamp.microk8s.multipass']
-    # - host: chart-example.local
-    #   paths:
-    #   - path: /
-    #     type: ImplementationSpecific
+    - host: headlamp.microk8s.multipass
+      paths:
+      - path: /
+        type: ImplementationSpecific
   # -- Ingress TLS configuration
   tls: []
   #  - secretName: chart-example-tls

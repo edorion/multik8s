@@ -6,3 +6,4 @@ masterkube/
 .license
 .vaultlicense
 .boundarylicense
+.secret

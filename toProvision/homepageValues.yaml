@@ -19,7 +19,7 @@ ingress:
       traefik.ingress.kubernetes.io/router.tls: "false"
       external-dns.alpha.kubernetes.io/hostname: homepage.microk8s.multipass
     hosts:
-      - host: vault.kallh.org
+      - host: dev.kallh.org
         paths:
           - path: /homepage
             pathType: Prefix

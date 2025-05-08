@@ -1,11 +1,16 @@
 {
 	log [logz] {
 		format  console
-		level   ERROR
+		level   DEBUG
+		output file /var/log/caddy/caddy.log
 	}
 	auto_https off
 }
 
-vault.kallh.org {
-	reverse_proxy 10.100.1.11
+awx.local:80 {
+	reverse_proxy 192.168.1.51:80
+}
+
+awx.kallh.org:80 {
+        reverse_proxy 192.168.1.51:80
 }

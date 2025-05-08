@@ -4,6 +4,7 @@ AWX:
   name: awx
   spec:
     admin_user: admin
+<<<<<<< HEAD
 
   # configurations for external postgres instance
   postgres:
@@ -17,6 +18,16 @@ AWX:
     password: Unset
     sslmode: prefer
     type: unmanaged
+=======
+    service_type: LoadBalancer
+    extra_settings:
+      - setting: CSRF_TRUSTED_ORIGINS
+        value:
+          - https://awx.kallh.org
+          - http://awx.local
+          - http://127.0.0.1
+          - http://localhost
+>>>>>>> 7a944c5 (more work)
 
 operator-controller:
   spec:
@@ -55,12 +66,23 @@ awx-manager:
          fieldPath: metadata.namespace
 
 ingress:
+<<<<<<< HEAD
   # Enable ingress for home assistant
+=======
+  # Enable ingress for AWX
+>>>>>>> 7a944c5 (more work)
   enabled: true
   className: "traefik"
   annotations:
     kubernetes.io/ingress.class: "traefik"
     kubernetes.io/tls-acme: "true"
+<<<<<<< HEAD
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
     traefik.ingress.kubernetes.io/router.tls: "true"
     external-dns.alpha.kubernetes.io/hostname: awx.microk8s.multipass
+=======
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    external-dns.alpha.kubernetes.io/hostname: awx.microk8s.multipass
+
+>>>>>>> 7a944c5 (more work)

@@ -1,0 +1,28 @@
+{
+	log [logz] {
+		level ERROR
+		format json
+#		output file /var/log/caddy/caddy.log
+	}
+#		auto_https off
+}
+
+vault.kallh.org {
+	reverse_proxy 10.100.1.11:8200
+}
+
+awx.kallh.org {
+        reverse_proxy awx.local:80
+}
+
+dev.kallh.org {
+        reverse_proxy dev.local:80 
+}
+
+head.kallh.org {
+        reverse_proxy head.local:80
+}
+
+traf.kallh.org {
+        reverse_proxy traf.local:80
+}

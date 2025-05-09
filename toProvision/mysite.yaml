@@ -37,21 +37,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-  type: ClusterIP
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: mysite-nginx-ingress
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Path('/')
-      kind: Rule
-      services:
-        - name: mysite-nginx-ingress
-          port: 80
+  type: LoadBalancer
 ---
 apiVersion: v1
 kind: ConfigMap

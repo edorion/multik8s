@@ -19,11 +19,6 @@ multipass exec pmaster -- sudo apt install caddy -y
 multipass exec pmaster -- sudo cp /home/ubuntu/.kube/Caddyfile /etc/caddy/Caddyfile
 multipass exec pmaster -- sudo systemctl restart caddy
 
-# Install Caddy
-multipass exec pmaster -- sudo apt install caddy -y
-multipass exec pmaster -- sudo cp /home/ubuntu/.kube/Caddyfile /etc/caddy/Caddyfile
-multipass exec pmaster -- sudo systemctl restart caddy
-
 # Install Microk8's
 multipass exec pmaster -- sudo snap install microk8s --classic
 multipass exec pmaster -- sudo snap install helm --classic
@@ -44,12 +39,8 @@ multipass exec pmaster -- sudo microk8s enable community
 multipass exec pmaster -- microk8s enable metallb:192.168.1.50-192.168.1.60
 #https://www.robert-jensen.dk/posts/2021-microk8s-with-traefik-and-metallb/
 multipass exec pmaster -- helm repo add traefik https://traefik.github.io/charts
-multipass exec pmaster -- helm repo add bitnami https://charts.bitnami.com/bitnami
 multipass exec pmaster -- helm repo update
 multipass exec pmaster -- helm install traefik traefik/traefik -n traefik --create-namespace
-multipass exec pmaster -- helm install external-dns bitnami/external-dns -n external-dns-gcp --create-namespace -f externalDnsValues.yaml 
-#multipass exec pmaster -- sudo microk8s enable dns
-#multipass exec pmaster -- sudo microk8s enable dashboard
 multipass exec pmaster -- sudo microk8s enable hostpath-storage
 
 # Join the nodes
@@ -61,6 +52,7 @@ multipass exec pmaster -- sudo microk8s enable hostpath-storage
 echo "###### Installing Headlamp & Cribl ######"
 multipass exec pmaster -- helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
 multipass exec pmaster -- helm install headlamp headlamp/headlamp -n kube-system -f /home/ubuntu/.kube/headlampValues.yaml
+multipass exec pmaster -- kubectl create token headlamp --namespace kube-system
 #multipass exec pmaster -- helm repo add cribl https://criblio.github.io/helm-charts/
 #multipass exec pmaster -- helm install cribl/cribl -f /home/ubuntu/.kube/CriblValues.yaml
 
@@ -75,36 +67,19 @@ multipass exec pmaster -- helm install headlamp headlamp/headlamp -n kube-system
 #VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 #multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
-# Install PSQL
-multipass exec pmaster -- kubectl create namespace database
-multipass exec pmaster -- kubectl create secret generic postgres-credentials -n database --from-literal=POSTGRES_PASSWORD='AdminPassword' --from-literal=APP_DB_PASSWORD='AUserPassword'
-sudo mkdir -p ./masterkube/data/postgres-data ./masterkube/data/postgres-dump
-sudo chown -R 1001:1001 ./masterkube/data/postgres-data
-sudo chown -R 1001:1001 ./masterkube/data/postgres-dump
-#Configure Appropriate Permissions
-sudo chmod -R 750 ./masterkube/data/postgres-data
-sudo chmod -R 750 ./masterkube/data/postgres-dump
-multipass exec pmaster -- kubectl create -f /home/ubuntu/.kube/postgres-pv.yaml
-multipass exec pmaster -- helm install postgres bitnami/postgresql -n database --values /home/ubuntu/.kube/postgres-values.yaml
-
 # Install AWX
 echo "###### Installing AWX ######"
 multipass exec pmaster -- kubectl create namespace awx
 multipass exec pmaster -- helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm/
 multipass exec pmaster -- helm install my-awx-operator awx-operator/awx-operator -n awx -f /home/ubuntu/.kube/AWX.yaml
 
-# install Homepage
-echo "###### Installing Homepage ######"
-multipass exec pmaster -- helm repo add jameswynn https://jameswynn.github.io/helm-charts
-multipass exec pmaster -- helm repo update
-multipass exec pmaster -- helm install homepage jameswynn/homepage -n kube-system -f /home/ubuntu/.kube/homepageValues.yaml
-
 # install coder
 multipass exec pmaster -- kubectl create namespace coder
-multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://postgres:AdminPassword@postgres-postgresql.database.svc.cluster.local:5432/coder?sslmode=disable"
+multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://coder:coder@192.168.1.10:32781/coder?sslmode=disable"
 multipass exec pmaster -- helm repo add coder-v2 https://helm.coder.com/v2
 multipass exec pmaster -- helm install coder coder-v2/coder --namespace coder --values /home/ubuntu/.kube/CoderValues.yaml --version 2.20.0
 # install test nginx app
-#multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
+multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
 
 date
+multipass list

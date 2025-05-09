@@ -4,21 +4,6 @@ AWX:
   name: awx
   spec:
     admin_user: admin
-<<<<<<< HEAD
-
-  # configurations for external postgres instance
-  postgres:
-    enabled: true
-    host: Unset
-    port: 5678
-    dbName: Unset
-    username: admin
-    # for secret management, pass in the password independently of this file
-    # at the command line, use --set AWX.postgres.password
-    password: Unset
-    sslmode: prefer
-    type: unmanaged
-=======
     service_type: LoadBalancer
     extra_settings:
       - setting: CSRF_TRUSTED_ORIGINS
@@ -27,7 +12,19 @@ AWX:
           - http://awx.local
           - http://127.0.0.1
           - http://localhost
->>>>>>> 7a944c5 (more work)
+
+  # configurations for external postgres instance
+  postgres:
+    enabled: true
+    host: 192.168.1.10
+    port: 32781
+    dbName: awx
+    username: awx
+    # for secret management, pass in the password independently of this file
+    # at the command line, use --set AWX.postgres.password
+    password: awx
+    sslmode: disable
+    type: unmanaged
 
 operator-controller:
   spec:
@@ -66,23 +63,12 @@ awx-manager:
          fieldPath: metadata.namespace
 
 ingress:
-<<<<<<< HEAD
-  # Enable ingress for home assistant
-=======
   # Enable ingress for AWX
->>>>>>> 7a944c5 (more work)
   enabled: true
   className: "traefik"
   annotations:
     kubernetes.io/ingress.class: "traefik"
     kubernetes.io/tls-acme: "true"
-<<<<<<< HEAD
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    external-dns.alpha.kubernetes.io/hostname: awx.microk8s.multipass
-=======
     traefik.ingress.kubernetes.io/router.entrypoints: "web"
     traefik.ingress.kubernetes.io/router.tls: "true"
-    external-dns.alpha.kubernetes.io/hostname: awx.microk8s.multipass
-
->>>>>>> 7a944c5 (more work)
+    external-dns.alpha.kubernetes.io/hostname: awx.local

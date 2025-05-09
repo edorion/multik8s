@@ -8,9 +8,33 @@
 }
 
 awx.local:80 {
-	reverse_proxy 192.168.1.51:80
+	reverse_proxy 192.168.1.53:80
 }
 
 awx.kallh.org:80 {
+        reverse_proxy 192.168.1.53:80
+}
+
+dev.local:80 {
+        reverse_proxy 192.168.1.52:80
+}
+
+dev.kallh.org:80 {
+        reverse_proxy 192.168.1.52:80
+}
+
+head.local:80 {
         reverse_proxy 192.168.1.51:80
+}
+
+head.kallh.org:80 {
+        reverse_proxy 192.168.1.51:80
+}
+
+traf.local:80 {
+        reverse_proxy 192.168.1.50:80
+}
+
+traf.kallh.org:80 {
+        reverse_proxy 192.168.1.50:80
 }

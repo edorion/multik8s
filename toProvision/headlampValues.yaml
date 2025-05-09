@@ -190,7 +190,7 @@ ingress:
       paths:
       - path: /
         type: ImplementationSpecific
-  # -- Ingress TLS configuration
+
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

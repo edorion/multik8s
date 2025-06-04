@@ -14,6 +14,8 @@ multipass delete --all -p
 multipass launch -m 36Gb -d 150G -c 4 -n pmaster --mount ./masterkube:/home/ubuntu/.kube
 #multipass launch -m 28Gb -d 150G -c 4 -n pworker1 --mount ./workerkube:/home/ubuntu/.kube
 
+multipass exec pmaster -- sudo apt-get install jq;  
+
 # Install Caddy
 multipass exec pmaster -- sudo apt install caddy -y
 multipass exec pmaster -- sudo cp /home/ubuntu/.kube/Caddyfile /etc/caddy/Caddyfile
@@ -57,15 +59,26 @@ multipass exec pmaster -- kubectl create token headlamp --namespace kube-system
 #multipass exec pmaster -- helm install cribl/cribl -f /home/ubuntu/.kube/CriblValues.yaml
 
 # install Vault
-#echo "###### Installing Vault ######"
-#multipass exec pmaster -- kubectl create namespace vault
-#multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-#export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
-#multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
-#while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault status; done
-#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
-#VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
-#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+echo "###### Installing Vault ######"
+multipass exec pmaster -- kubectl create namespace vault
+multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
+multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
+while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault status; done
+multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+
+# install Vault-DR
+echo "###### Installing Vault ######"
+multipass exec pmaster -- kubectl create namespace vaultDR
+multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+export VAULT_DR_K8S_NAMESPACE="vaultDR" export VAULT_DR_HELM_RELEASE_NAME="vault"
+multipass exec pmaster -- helm install -n $VAULT_DR_K8S_NAMESPACE $VAULT_DR_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultDROverrides.yaml
+while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault status; done
+multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+VAULT_DR_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_DR_UNSEAL_KEY
 
 # Install AWX
 echo "###### Installing AWX ######"
@@ -75,11 +88,14 @@ multipass exec pmaster -- helm install my-awx-operator awx-operator/awx-operator
 
 # install coder
 multipass exec pmaster -- kubectl create namespace coder
-multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://coder:coder@192.168.1.10:32781/coder?sslmode=disable"
+multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://postgres:Tassie13!@192.168.1.170:5432/coder?sslmode=disable"
 multipass exec pmaster -- helm repo add coder-v2 https://helm.coder.com/v2
 multipass exec pmaster -- helm install coder coder-v2/coder --namespace coder --values /home/ubuntu/.kube/CoderValues.yaml --version 2.20.0
+
 # install test nginx app
 multipass exec pmaster -- kubectl apply -f ./.kube/mysite.yaml
 
 date
+echo "#### AWX pass ####"
+multipass exec pmaster -- kubectl get secret awx-admin-password -o jsonpath="{.data.password}" -n awx | base64 --decode ; echo
 multipass list

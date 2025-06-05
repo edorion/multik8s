@@ -83,6 +83,7 @@ multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vau
 # Install AWX
 echo "###### Installing AWX ######"
 multipass exec pmaster -- kubectl create namespace awx
+multipass exec pmaster -- kubectl create secret generic -n awx awx-secret-key --from-file /home/ubuntu/.kube/awx_secret_key.py
 multipass exec pmaster -- helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm/
 multipass exec pmaster -- helm install my-awx-operator awx-operator/awx-operator -n awx -f /home/ubuntu/.kube/AWX.yaml
 

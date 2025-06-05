@@ -13,3 +13,10 @@ Including:
 - fluentd
 - fluentb bit
 - headlamp
+
+
+For inital install, remove/comment out awx_secret_key from AWX.yaml or create a awx_secret_key.py with contents like the following
+
+```
+AWX_SECRET_KEY = "******************value***********************"
+```

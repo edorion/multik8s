@@ -7,4 +7,4 @@ masterkube/
 .vaultlicense
 .boundarylicense
 .secret
-toProvision/awx_secret_key.py
+toProvision/awx_secret_key.yaml

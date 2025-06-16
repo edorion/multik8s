@@ -59,31 +59,31 @@ multipass exec pmaster -- kubectl create token headlamp --namespace kube-system
 #multipass exec pmaster -- helm install cribl/cribl -f /home/ubuntu/.kube/CriblValues.yaml
 
 # install Vault
-echo "###### Installing Vault ######"
-multipass exec pmaster -- kubectl create namespace vault
-multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
-multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
-while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault status; done
-multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
-VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
-multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+#echo "###### Installing Vault ######"
+#multipass exec pmaster -- kubectl create namespace vault
+#multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+#export VAULT_K8S_NAMESPACE="vault" export VAULT_HELM_RELEASE_NAME="vault"
+#multipass exec pmaster -- helm install -n $VAULT_K8S_NAMESPACE $VAULT_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultOverrides.yaml
+#while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault status; done
+#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+#VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+#multipass exec pmaster -- kubectl -n $VAULT_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 
 # install Vault-DR
-echo "###### Installing Vault ######"
-multipass exec pmaster -- kubectl create namespace vaultDR
-multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
-export VAULT_DR_K8S_NAMESPACE="vaultDR" export VAULT_DR_HELM_RELEASE_NAME="vault"
-multipass exec pmaster -- helm install -n $VAULT_DR_K8S_NAMESPACE $VAULT_DR_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultDROverrides.yaml
-while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault status; done
-multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
-VAULT_DR_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
-multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_DR_UNSEAL_KEY
+#echo "###### Installing Vault DR ######"
+#multipass exec pmaster -- kubectl create namespace vault-dr
+#multipass exec pmaster -- helm repo add hashicorp https://helm.releases.hashicorp.com
+#export VAULT_DR_K8S_NAMESPACE="vault-dr" export VAULT_DR_HELM_RELEASE_NAME="vault-dr"
+#multipass exec pmaster -- helm install -n $VAULT_DR_K8S_NAMESPACE $VAULT_DR_HELM_RELEASE_NAME hashicorp/vault -f /home/ubuntu/.kube/VaultDROverrides.yaml
+#while [ $? -ne 2 ]; do echo "still testing"; multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-dr-0 -- vault status; done
+#multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
+#VAULT_DR_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
+#multipass exec pmaster -- kubectl -n $VAULT_DR_K8S_NAMESPACE exec vault-0 -- vault operator unseal $VAULT_DR_UNSEAL_KEY
 
 # Install AWX
 echo "###### Installing AWX ######"
 multipass exec pmaster -- kubectl create namespace awx
-multipass exec pmaster -- kubectl create secret generic -n awx awx-secret-key --from-file /home/ubuntu/.kube/awx_secret_key.py
+multipass exec pmaster -- kubectl create -f /home/ubuntu/.kube/awx_secret_key.yaml
 multipass exec pmaster -- helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm/
 multipass exec pmaster -- helm install my-awx-operator awx-operator/awx-operator -n awx -f /home/ubuntu/.kube/AWX.yaml
 

@@ -15,8 +15,15 @@ Including:
 - headlamp
 
 
-For inital install, remove/comment out awx_secret_key from AWX.yaml or create a awx_secret_key.py with contents like the following
+For inital install, remove/comment out awx_secret_key from AWX.yaml or create a awx_secret_key.yaml with contents like the following
 
 ```
-AWX_SECRET_KEY = "******************value***********************"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: custom-awx-secret-key
+  namespace: awx
+stringData:
+  secret_key: ***********
 ```

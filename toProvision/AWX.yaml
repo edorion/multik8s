@@ -5,6 +5,7 @@ AWX:
   spec:
     admin_user: admin
     service_type: LoadBalancer
+    secret_key_secret: custom-awx-secret-key
     extra_settings:
       - setting: CSRF_TRUSTED_ORIGINS
         value:
@@ -12,10 +13,6 @@ AWX:
           - http://awx.local
           - http://127.0.0.1
           - http://localhost
-    extra_settings_files:
-      configmaps:
-        - name: awx-secret-key
-          key: awx_secret_key.py
 
   # configurations for external postgres instance
   postgres:

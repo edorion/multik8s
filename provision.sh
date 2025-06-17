@@ -89,7 +89,7 @@ multipass exec pmaster -- helm install my-awx-operator awx-operator/awx-operator
 
 # install coder
 multipass exec pmaster -- kubectl create namespace coder
-multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://postgres:Tassie13!@192.168.1.170:5432/coder?sslmode=disable"
+multipass exec pmaster -- kubectl create secret generic coder-db-url -n coder --from-literal=url="postgres://postgres:password@192.168.1.170:5432/coder?sslmode=disable"
 multipass exec pmaster -- helm repo add coder-v2 https://helm.coder.com/v2
 multipass exec pmaster -- helm install coder coder-v2/coder --namespace coder --values /home/ubuntu/.kube/CoderValues.yaml --version 2.20.0
 
